@@ -54,86 +54,131 @@
         </div>
 
         <div id="step-content-2" class="step-content">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <label for="resolution">分辨率:</label>
-                    <select id="resolution">
-                        <option value="3840x2400">3840x2400 (4K UHD 16:10)</option>
-                        <option value="2560x1600">2560x1600 (WQXGA)</option>
-                        <option value="1920x1200">1920x1200 (WUXGA)</option>
-                        <option value="1680x1050" selected>1680x1050 (WSXGA+)</option>
-                        <option value="1440x900">1440x900 (WXGA+)</option>
-                        <option value="1280x800">1280x800 (WXGA)</option>
-                        <option value="1024x640">1024x640</option>
-                        <option value="800x500">800x500</option>
-                        <option value="640x400">640x400</option>
-                        <option value="320x200">320x200</option>
-                        <option value="80x50">80x50</option>
-                    </select>
-                </div>
+    <div class="controls-grid">
+        <div class="control-group">
+            <label for="resolution">分辨率:</label>
+            <select id="resolution">
+                <option value="3840x2400">3840x2400 (4K UHD 16:10)</option>
+                <option value="2560x1600">2560x1600 (WQXGA)</option>
+                <option value="1920x1200">1920x1200 (WUXGA)</option>
+                <option value="1680x1050" selected>1680x1050 (WSXGA+)</option>
+                <option value="1440x900">1440x900 (WXGA+)</option>
+                <option value="1280x800">1280x800 (WXGA)</option>
+                <option value="1024x640">1024x640</option>
+                <option value="800x500">800x500</option>
+                <option value="640x400">640x400</option>
+                <option value="320x200">320x200</option>
+                <option value="80x50">80x50</option>
+            </select>
+        </div>
 
-                <div class="control-group">
-                    <label for="framerate">帧率:</label>
-                    <select id="framerate">
-                        <option value="24">24 fps</option>
-                        <option value="30">30 fps</option>
-                        <option value="60" selected>60 fps</option>
-                        <option value="120">120 fps</option>
-                        <option value="144">144 fps</option>
-                    </select>
-                </div>
+        <div class="control-group">
+            <label for="framerate">帧率:</label>
+            <select id="framerate">
+                <option value="24">24 fps</option>
+                <option value="30">30 fps</option>
+                <option value="60" selected>60 fps</option>
+                <option value="120">120 fps</option>
+                <option value="144">144 fps</option>
+            </select>
+        </div>
 
-                <div class="control-group">
-                    <label for="bitrate">码率:</label>
-                    <div class="control-row" style="align-items: flex-end;">
-                        <input type="number" id="bitrate" value="8000" min="100" max="50000" step="100"
-                            style="flex-grow: 1;">
-                        <span style="color: var(--md-sys-color-on-surface-variant); font-size: 14px;">kbps</span>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label for="speed">谱面流速:</label>
-                    <div class="range-slider-row">
-                        <input type="range" id="speed" min="1" max="50" value="20" style="flex-grow: 1;">
-                        <span class="range-value" id="speed-value">20</span>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label for="size">Note大小:</label>
-                    <div class="range-slider-row">
-                        <input type="range" id="size" min="1" max="50" value="20" style="flex-grow: 1;">
-                        <span class="range-value" id="size-value">20</span>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <div class="switch-container">
-                        <label for="hit" style="margin-right: 0;">打击特效:</label>
-                        <label class="switch">
-                            <input type="checkbox" id="hit" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <div class="switch-container">
-                        <label for="hitsound" style="margin-right: 0;">打击音效:</label>
-                        <label class="switch">
-                            <input type="checkbox" id="hitsound" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="button-group">
-                <button class="secondary-btn" onclick="prevStep()">上一步</button>
-                <button class="primary-btn" onclick="nextStep()">开始渲染</button>
+        <div class="control-group">
+            <label for="bitrate">码率:</label>
+            <div class="control-row" style="align-items: flex-end;">
+                <input type="number" id="bitrate" value="8000" min="100" max="50000" step="100"
+                    style="flex-grow: 1;">
+                <span style="color: var(--md-sys-color-on-surface-variant); font-size: 14px;">kbps</span>
             </div>
         </div>
+
+        <div class="control-group">
+            <label for="speed">谱面流速:</label>
+            <div class="range-slider-row">
+                <input type="range" id="speed" min="1" max="50" value="20" style="flex-grow: 1;">
+                <span class="range-value" id="speed-value">20</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="size">Note大小:</label>
+            <div class="range-slider-row">
+                <input type="range" id="size" min="1" max="50" value="20" style="flex-grow: 1;">
+                <span class="range-value" id="size-value">20</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="bg-brightness">背景亮度 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="bg-brightness" min="0" max="100" value="75" style="flex-grow: 1;">
+                <span class="range-value" id="bg-brightness-value">75</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="hit-effect-size">打击特效大小 (0~50):</label>
+            <div class="range-slider-row">
+                <input type="range" id="hit-effect-size" min="0" max="50" value="30" style="flex-grow: 1;">
+                <span class="range-value" id="hit-effect-size-value">30</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label for="volume-tap">Tap 音量 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="volume-tap" min="0" max="100" value="80" style="flex-grow: 1;">
+                <span class="range-value" id="volume-tap-value">80</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label for="volume-smallslide">SmallSlide 音量 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="volume-smallslide" min="0" max="100" value="80" style="flex-grow: 1;">
+                <span class="range-value" id="volume-smallslide-value">80</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label for="volume-bigslide">BigSlide 音量 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="volume-bigslide" min="0" max="100" value="80" style="flex-grow: 1;">
+                <span class="range-value" id="volume-bigslide-value">80</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label for="volume-flick">Flick 音量 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="volume-flick" min="0" max="100" value="80" style="flex-grow: 1;">
+                <span class="range-value" id="volume-flick-value">80</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="volume-rotate">Rotate 音量 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="volume-rotate" min="0" max="100" value="80" style="flex-grow: 1;">
+                <span class="range-value" id="volume-rotate-value">80</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="volume-catch">Catch 音量 (%):</label>
+            <div class="range-slider-row">
+                <input type="range" id="volume-catch" min="0" max="100" value="80" style="flex-grow: 1;">
+                <span class="range-value" id="volume-catch-value">80</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="button-group">
+        <button class="secondary-btn" onclick="prevStep()">上一步</button>
+        <button class="primary-btn" onclick="nextStep()">开始渲染</button>
+    </div>
+</div>
 
         <div id="step-content-3" class="step-content">
             <div class="rendering-info" id="render-status-text">

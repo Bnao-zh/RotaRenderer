@@ -376,6 +376,7 @@ async function handleFolderSelect() {
  * 渲染启动方法 (需要你自己实现)
  */
 function startRender() {
+    iframe.contentWindow.isStartRenderer = 1;
     console.log('🚀 开始渲染...');
     renderStatusText.textContent = '正在执行渲染任务...';
     // TODO: 在这里写入你的渲染启动逻辑
@@ -386,8 +387,9 @@ function startRender() {
  * 渲染取消方法 (需要你自己实现)
  */
 function stopRender() {
+    iframe.contentWindow.isStartRenderer = 0;
+    resetToStep1()
     console.log('🛑 渲染已取消');
-    // TODO: 在这里写入你的渲染停止/取消逻辑
 }
 
 /**
@@ -420,7 +422,7 @@ function simulateRenderProgress() {
     let progress = 0;
     progressBar.style.width = '0%';
     progressInterval = setInterval(() => {
-        progress += 1;
+        progress = iframe.contentWindow.Renderprogress;
         progressBar.style.width = `${progress}%`;
         if (progress >= 100) {
             clearInterval(progressInterval);
@@ -469,6 +471,17 @@ function confirmCancelRender() {
  * 应用设置并发送到 iframe
  */
 function applySettings() {
+    const hitsoundVolumeObject = {
+        tap: document.getElementById('volume-tap').value,
+        smallSlide: document.getElementById('volume-smallslide').value,
+        bigSlide: document.getElementById('volume-bigslide').value,
+        flick: document.getElementById('volume-flick').value,
+        rotate: document.getElementById('volume-rotate').value,
+        catch: document.getElementById('volume-catch').value,
+    };
+
+    // 2. 将 hitsoundVolume 对象转换为 JSON 字符串
+    const hitsoundVolumeJsonString = JSON.stringify(hitsoundVolumeObject);
     const settings = {
         type: 'applySettings',
         resolution: document.getElementById('resolution').value,
@@ -476,8 +489,12 @@ function applySettings() {
         bitrate: document.getElementById('bitrate').value,
         speed: document.getElementById('speed').value,
         size: document.getElementById('size').value,
-        hit: document.getElementById('hit').checked,
-        hitsound: document.getElementById('hitsound').checked
+        // hit: document.getElementById('hit').checked,
+        // hitsound: document.getElementById('hitsound').checked
+        // --- 新增/修改的设置 ---
+        hitEffectSize: document.getElementById('hit-effect-size').value, // 打击特效大小 (0-50)
+        bgBrightness: document.getElementById('bg-brightness').value, // 背景亮度 (0-100)
+        hitsoundVolume: hitsoundVolumeJsonString,
     };
 
     // 发送消息到iframe
@@ -493,7 +510,7 @@ function applySettings() {
     if (currentStep !== 3) {
         statusText.textContent = '参数已更新';
         setTimeout(() => {
-            if (currentStep !== 3) statusText.textContent = '调整参数中...';
+            if (currentStep !== 3) statusText.textContent = '渲染器就绪';
         }, 1000);
     }
 }
@@ -549,17 +566,35 @@ function resetIframe() {
 
 // --- 事件监听器设置 ---
 function setupEventListeners() {
-    // 范围输入框的实时值显示
-    document.getElementById('speed').addEventListener('input', function () {
-        document.getElementById('speed-value').textContent = this.value;
-    });
-    document.getElementById('size').addEventListener('input', function () {
-        document.getElementById('size-value').textContent = this.value;
+    // --- 范围输入框的实时值显示 ---
+    const rangeControls = [
+        { id: 'speed', displayId: 'speed-value' },
+        { id: 'size', displayId: 'size-value' },
+        { id: 'bg-brightness', displayId: 'bg-brightness-value' },
+        { id: 'hit-effect-size', displayId: 'hit-effect-size-value' },
+        { id: 'volume-tap', displayId: 'volume-tap-value' },
+        { id: 'volume-smallslide', displayId: 'volume-smallslide-value' },
+        { id: 'volume-bigslide', displayId: 'volume-bigslide-value' },
+        { id: 'volume-flick', displayId: 'volume-flick-value' },
+        { id: 'volume-rotate', displayId: 'volume-rotate-value' },
+        { id: 'volume-catch', displayId: 'volume-catch-value' },
+    ];
+
+    rangeControls.forEach(control => {
+        const input = document.getElementById(control.id);
+        const display = document.getElementById(control.displayId);
+        if (input && display) {
+            input.addEventListener('input', function () {
+                display.textContent = this.value;
+            });
+        }
     });
 
     // 所有设置控件的变更事件
     document.querySelectorAll('#step-content-2 input, #step-content-2 select').forEach(control => {
-        control.addEventListener(control.type === 'range' || control.type === 'number' ? 'input' : 'change', applySettings);
+        // range 和 number 控件使用 'input' (实时更新)，select 使用 'change'
+        const eventType = (control.type === 'range' || control.type === 'number' || control.type === 'checkbox') ? 'input' : 'change';
+        control.addEventListener(eventType, applySettings);
     });
 
     // 监听 iframe 加载完成
