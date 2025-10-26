@@ -22,8 +22,7 @@ let rendererSettings = {
     })
 };
 
-let isStartRenderer = 0;
-let Renderprogress = 0;
+var Renderprogress = 0;
 
 // 监听来自父页面的消息
 // 嵌入页面 renderer.html
@@ -159,7 +158,11 @@ class RotaRendererSettings {
             case '背景亮度':
                 return rendererSettings.bgBrightness;
             case '渲染状态':
-                return isStartRenderer;
+                if (typeof isStartRenderer !== 'undefined') {
+                    return isStartRenderer;
+                } else {
+                    return 0;
+                }
             case '谱面文件':
                 if (typeof zipfile !== 'undefined') {
                     return zipfile;

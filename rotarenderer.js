@@ -337,11 +337,11 @@ async function handleFolderSelect() {
 
             // 可选：为了保证在 zip 中有唯一的且容易识别的名字，可以根据类型重命名
             if (matchesExtension(filename, txtExts)) {
-                zipFilename = `content.${filename.split('.').pop()}`;
+                zipFilename = `chart.txt`;
             } else if (matchesExtension(filename, imgExts)) {
-                zipFilename = `image.${filename.split('.').pop()}`;
+                zipFilename = `cover.jpg`;
             } else if (matchesExtension(filename, audioExts)) {
-                zipFilename = `audio.${filename.split('.').pop()}`;
+                zipFilename = `song.wav`;
             }
 
             // 将文件数据添加到 ZIP 中
@@ -404,7 +404,8 @@ function doneRender() {
     // 延时进入完成步骤
     setTimeout(() => {
         renderStep(4);
-    }, 1000);
+        openRenderFolder()
+    }, 500);
 }
 
 /**
@@ -442,7 +443,7 @@ function resetToStep1() {
 }
 
 function openRenderFolder() {
-    alert('打开文件夹操作 (需要自行实现系统调用)');
+    window.electron.ipcRenderer.invoke('opentempfolder');
     console.log('📁 触发打开渲染文件夹');
     // TODO: 在这里写入你的打开文件夹的系统调用逻辑
 }
@@ -461,8 +462,6 @@ function hideCancelModal() {
 function confirmCancelRender() {
     hideCancelModal();
     stopRender();
-    clearInterval(progressInterval); // 停止进度模拟
-    renderStep(2); // 取消后返回参数调整步骤
 }
 
 // --- 通用/原有逻辑整合 ---

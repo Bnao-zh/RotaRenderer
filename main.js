@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { execFile } = require('child_process');
 const fs = require('fs');
@@ -666,6 +666,10 @@ function endRendering() {
     });
 }
 
+function opentempfolder() {
+    shell.openPath(TEMP_DIR);
+}
+
 // 暴露函数给渲染进程
 ipcMain.handle('initren', initren);
 ipcMain.handle('savefile', savefile);
@@ -675,6 +679,7 @@ ipcMain.handle('delimg', delimg);
 ipcMain.handle('startRendering', startRendering);
 ipcMain.handle('addFrame', addFrame);
 ipcMain.handle('endRendering', endRendering);
+ipcMain.handle('opentempfolder', opentempfolder);
 // =======================================================
 // 选择文件夹相关
 // =======================================================
