@@ -36,5 +36,6 @@ Thumbs.db
 # Temporary folders
 tmp/
 temp/
-assets/
+/app/assets/*
+!/app/assets/project.json
 bin/

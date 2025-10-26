@@ -799,7 +799,7 @@ function createWindow() {
         }
     });
     win.setMenuBarVisibility(false);
-    win.loadFile('rotarenderer.html');
+    win.loadFile('app/rotarenderer.html');
 }
 
 app.whenReady().then(() => {

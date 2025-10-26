@@ -39,11 +39,10 @@ window.addEventListener('message', (event) => {
             // --- 转换为数字（包括新增的）---
             framerate: parseFloat(data.framerate) || 60,
             bitrate: parseFloat(data.bitrate) || 8000,
-            speed: parseFloat(data.speed) || 20,
-            size: parseFloat(data.size) || 20,
-
-            hitEffectSize: parseFloat(data.hitEffectSize) || 30, // 新增
-            bgBrightness: parseFloat(data.bgBrightness) || 75,   // 新增
+            speed: !isNaN(parseFloat(data.speed)) ? parseFloat(data.speed) : 20,
+            size: !isNaN(parseFloat(data.size)) ? parseFloat(data.size) : 20,
+            hitEffectSize: !isNaN(parseFloat(data.hitEffectSize)) ? parseFloat(data.hitEffectSize) : 30,
+            bgBrightness: !isNaN(parseFloat(data.bgBrightness)) ? parseFloat(data.bgBrightness) : 75,
 
             // hitsoundVolume 直接使用传入的 JSON 字符串
             hitsoundVolume: data.hitsoundVolume
@@ -186,11 +185,12 @@ class RotaRendererSettings {
     _getVolume(noteType) {
         try {
             const volumeObject = JSON.parse(rendererSettings.hitsoundVolume);
-            // 将字符串值转换为浮点数，并提供默认值 80
-            return parseFloat(volumeObject[noteType]) || 80;
+            const value = volumeObject[noteType];
+            const parsed = parseFloat(value);
+            return !isNaN(parsed) ? parsed : 80;
         } catch (e) {
             console.error("Error parsing hitsoundVolume JSON:", e);
-            return 80; // 解析失败返回默认值
+            return 80;
         }
     }
 
