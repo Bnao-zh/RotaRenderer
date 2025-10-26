@@ -164,7 +164,7 @@ class RotaRendererSettings {
                 if (typeof zipfile !== 'undefined') {
                     return zipfile;
                 } else {
-                    return null;
+                    return '';
                 }
             default:
                 return '未知设置';

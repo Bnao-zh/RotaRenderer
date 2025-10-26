@@ -172,12 +172,13 @@ function adjustVolume(inputPath, outputPath, volume) {
 }
 
 //合成打击音
-function mixhit(event, hitlist) {
+function mixhit(event, hitlist, vollist) {
     return new Promise((resolve, reject) => {
         try {
             // 1. 参数预处理
             const processed = {
-                hitlist: hitlist.split(',').map(item => item.trim())
+                hitlist: hitlist.split(',').map(item => item.trim()),
+                vollist: vollist.split(',').map(item => item.trim())
             };
 
             // 2. 创建临时目录（如果不存在）
@@ -188,13 +189,13 @@ function mixhit(event, hitlist) {
             // 3. 调整指定音频文件的音量
             const adjustVolumePromises = [];
             const filesToAdjust = {
-                'a2.wav': 0.80,  // 50% volume
-                'a3.wav': 0.80,
-                'a0.wav': 0.80,
-                'a1.wav': 0.80,
-                'a40.wav': 0.80,
-                'a41.wav': 0.80,
-                'a5.wav': 0.80    // 75% volume for others
+                'a2.wav': processed.vollist[2] / 100,  // 50% volume
+                'a3.wav': processed.vollist[3] / 100,
+                'a0.wav': processed.vollist[0] / 100,
+                'a1.wav': processed.vollist[1] / 100,
+                'a40.wav': processed.vollist[4] / 100,
+                'a41.wav': processed.vollist[4] / 100,
+                'a5.wav': processed.vollist[5] / 100
             };
 
             for (const [filename, volume] of Object.entries(filesToAdjust)) {

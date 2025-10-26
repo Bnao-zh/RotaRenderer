@@ -58,11 +58,15 @@ class SCRenderer {
                 {
                     opcode: 'mixhit',
                     blockType: Scratch.BlockType.COMMAND,
-                    text: '合成打击音 [hitlist]',
+                    text: '合成打击音 [hitlist] [vollist]',
                     arguments: {
                         hitlist: {
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: '0,a1.wav'
+                            defaultValue: '0,null.wav'
+                        },
+                        vollist: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: '80,80,80,80,80,80'
                         }
                     }
                 },
@@ -111,7 +115,7 @@ class SCRenderer {
 
     async mixhit(args) {
         try {
-            const outputPath = await window.electron.ipcRenderer.invoke('mixhit', args.hitlist);
+            const outputPath = await window.electron.ipcRenderer.invoke('mixhit', args.hitlist, args.vollist);
             console.log(`打击音合成成功:`, outputPath);
         } catch (error) {
             console.error('合成打击音失败:', error);
