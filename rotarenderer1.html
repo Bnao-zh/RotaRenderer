@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>RotaRenderer</title>
+    <style>
+        :root {
+            /* ===== Material You 深色主题（柔和版）+ 蓝色主色 ===== */
+            --md-sys-color-primary: #65A9FF;
+            /* 主色：明亮蓝 */
+            --md-sys-color-on-primary: #003262;
+            /* 主色上文字：深蓝 */
+            --md-sys-color-primary-container: #00498F;
+            --md-sys-color-on-primary-container: #BFE1FF;
+
+            /* 背景：比纯黑更柔和的深灰 */
+            --md-sys-color-background: #1C1B1F;
+
+            /* 主内容区域：比背景亮一点 */
+            --md-sys-color-surface: #2A292E;
+
+            /* 文字颜色 */
+            --md-sys-color-on-surface: #E6E1E5;
+            --md-sys-color-on-surface-variant: #C4C7C5;
+
+            /* 控件背景（输入框、滑块轨道等） */
+            --md-sys-color-surface-variant: #333238;
+
+            /* 边框/分割线 */
+            --md-sys-color-outline: #7A787E;
+
+            /* 错误色 */
+            --md-sys-color-error: #FFB4AB;
+            --md-sys-color-on-error: #690005;
+
+            /* 阴影（深色适配） */
+            --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --elevation-2: 0 2px 8px rgba(0, 0, 0, 0.4);
+            --elevation-3: 0 4px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: var(--md-sys-color-surface);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: var(--elevation-2);
+            max-width: 900px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            color: var(--md-sys-color-on-surface);
+            margin: 0 0 24px 0;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            font-weight: 500;
+            line-height: 16px;
+        }
+
+        select,
+        input[type="number"] {
+            padding: 12px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            background-color: var(--md-sys-color-surface-variant);
+            color: var(--md-sys-color-on-surface);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            background-color: var(--md-sys-color-surface);
+            box-shadow: 0 0 0 2px var(--md-sys-color-primary);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 20px;
+            background: transparent;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 2px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--md-sys-color-primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            margin-top: -8px;
+            cursor: pointer;
+            border: 2px solid var(--md-sys-color-on-primary);
+        }
+
+        .range-value {
+            min-width: 36px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 32px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--md-sys-color-surface-variant);
+            transition: .3s;
+            border-radius: 16px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 6px;
+            bottom: 6px;
+            background-color: var(--md-sys-color-surface);
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        input:checked+.slider {
+            background-color: var(--md-sys-color-primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+            background-color: var(--md-sys-color-on-primary);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            box-shadow: var(--elevation-1);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            box-shadow: var(--elevation-2);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-on-error);
+        }
+
+        .iframe-container {
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            border-radius: 28px;
+            overflow: hidden;
+            margin: 0 auto 24px;
+            background-color: #222126;
+            border: 3px solid var(--md-sys-color-outline);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            transform-origin: top left;
+        }
+
+        .status-bar {
+            padding: 12px 16px;
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 16px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>RotaRenderer</h1>
+
+        <div class="controls-grid">
+            <!-- 分辨率选择 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="resolution">分辨率:</label>
+                    <select id="resolution">
+                        <option value="3840x2400">3840x2400 (4K UHD 16:10)</option>
+                        <option value="2560x1600">2560x1600 (WQXGA)</option>
+                        <option value="1920x1200">1920x1200 (WUXGA)</option>
+                        <option value="1680x1050" selected>1680x1050 (WSXGA+)</option>
+                        <option value="1440x900">1440x900 (WXGA+)</option>
+                        <option value="1280x800">1280x800 (WXGA)</option>
+                        <option value="1024x640">1024x640</option>
+                        <option value="800x500">800x500</option>
+                        <option value="640x400">640x400</option>
+                        <option value="320x200">320x200</option>
+                        <option value="80x50">80x50</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 帧率选择 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="framerate">帧率:</label>
+                    <select id="framerate">
+                        <option value="24">24 fps</option>
+                        <option value="30">30 fps</option>
+                        <option value="60" selected>60 fps</option>
+                        <option value="120">120 fps</option>
+                        <option value="144">144 fps</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 码率输入 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="bitrate">码率:</label>
+                    <input type="number" id="bitrate" value="8000" min="100" max="50000" step="100">
+                    <span style="color: #888; font-size: 12px;">kbps</span>
+                </div>
+            </div>
+
+            <!-- 谱面流速 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="speed">谱面流速:</label>
+                    <input type="range" id="speed" min="1" max="50" value="20">
+                    <span class="range-value" id="speed-value">20</span>
+                </div>
+            </div>
+
+            <!-- Note大小 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="size">Note大小:</label>
+                    <input type="range" id="size" min="1" max="50" value="20">
+                    <span class="range-value" id="size-value">20</span>
+                </div>
+            </div>
+
+            <!-- 打击特效 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="hit">打击特效:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="hit" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 打击音效 -->
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="hitsound">打击音效:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="hitsound" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="reset-btn" onclick="resetIframe()">重置渲染器</button>
+        </div>
+
+        <div class="iframe-container">
+            <iframe id="embedded-frame" src="index.html"></iframe>
+        </div>
+
+        <div class="status-bar">
+            <span class="status-indicator"></span>
+            <span id="status-text">渲染器已就绪</span>
+        </div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('embedded-frame');
+        const container = document.querySelector('.iframe-container');
+        const statusText = document.getElementById('status-text');
+        let settingsInterval;
+
+        // 统一的设置应用函数
+        function applySettings() {
+
+            const settings = {
+                type: 'applySettings',
+                resolution: document.getElementById('resolution').value,
+                framerate: document.getElementById('framerate').value,
+                bitrate: document.getElementById('bitrate').value,
+                speed: document.getElementById('speed').value,
+                size: document.getElementById('size').value,
+                hit: document.getElementById('hit').checked,
+                hitsound: document.getElementById('hitsound').checked
+            };
+
+            // 发送消息到iframe
+            iframe.contentWindow.postMessage(settings, '*');
+
+            // 应用分辨率设置
+            setIframeResolution(settings.resolution);
+
+            // 更新状态
+            statusText.textContent = '设置已应用';
+            setTimeout(() => {
+                statusText.textContent = '渲染器已就绪';
+            }, 1000);
+        }
+
+        // 设置iframe分辨率并缩放
+        function setIframeResolution(resolution) {
+            const [w, h] = resolution.split('x').map(Number);
+            const dpr = window.devicePixelRatio || 1;
+
+            let width = w / dpr;
+            let height = h / dpr;
+
+            iframe.style.width = `${width}px`;
+            iframe.style.height = `${height}px`;
+
+            const scaleX = 800 / width;
+            const scaleY = 500 / height;
+
+            iframe.style.transform = `scale(${scaleX}, ${scaleY})`;
+        }
+
+        // 定时发送设置
+        function startSettingsSync() {
+            if (settingsInterval) {
+                clearInterval(settingsInterval);
+            }
+
+            // 每0.5秒发送一次设置
+            settingsInterval = setInterval(() => {
+                const rawResolution = document.getElementById('resolution').value;
+                const rawFramerate = document.getElementById('framerate').value;
+                const rawBitrate = document.getElementById('bitrate').value;
+                const rawSpeed = document.getElementById('speed').value;
+                const rawSize = document.getElementById('size').value;
+
+                const defaultFramerate = 60;
+                const defaultBitrate = 8000;
+                const defaultSpeed = 20;
+                const defaultSize = 20;
+
+                const settings = {
+                    type: 'applySettings',
+                    resolution: rawResolution,
+                    framerate: parseInt(rawFramerate, 10) || defaultFramerate,
+                    bitrate: parseInt(rawBitrate, 10) || defaultBitrate,
+                    speed: parseInt(rawSpeed, 10) || defaultSpeed,
+                    size: parseInt(rawSize, 10) || defaultSize,
+                    hit: document.getElementById('hit').checked,
+                    hitsound: document.getElementById('hitsound').checked
+                };
+
+                iframe.contentWindow.postMessage(settings, '*');
+            }, 500);
+        }
+
+        // 重置iframe
+        function resetIframe() {
+            iframe.src = iframe.src;
+            statusText.textContent = '正在重置...';
+
+            // 重置时暂停同步
+            if (settingsInterval) {
+                clearInterval(settingsInterval);
+            }
+
+            setTimeout(() => {
+                statusText.textContent = '渲染器已重置';
+                setTimeout(() => {
+                    statusText.textContent = '渲染器已就绪';
+                    // 重置完成后重新开始同步
+                    startSettingsSync();
+                }, 1500);
+            }, 1000);
+        }
+
+        // 为所有控件添加事件监听器
+        document.getElementById('resolution').addEventListener('change', applySettings);
+        document.getElementById('framerate').addEventListener('change', applySettings);
+        document.getElementById('bitrate').addEventListener('input', applySettings);
+        document.getElementById('speed').addEventListener('input', function () {
+            document.getElementById('speed-value').textContent = this.value;
+            applySettings();
+        });
+        document.getElementById('size').addEventListener('input', function () {
+            document.getElementById('size-value').textContent = this.value;
+            applySettings();
+        });
+        document.getElementById('hit').addEventListener('change', applySettings);
+        document.getElementById('hitsound').addEventListener('change', applySettings);
+
+        // 初始化
+        setIframeResolution(document.getElementById('resolution').value);
+
+        // 监听iframe加载完成
+        iframe.addEventListener('load', function () {
+            statusText.textContent = '渲染器已就绪';
+            // 渲染器加载完成后开始同步
+            startSettingsSync();
+        });
+
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', function () {
+            if (settingsInterval) {
+                clearInterval(settingsInterval);
+            }
+        });
+        window.addEventListener('message', async (event) => {
+            const { type, channel, args, requestId } = event.data;
+
+            // 我们只处理 'ipc-invoke' 类型的消息
+            if (type === 'ipc-invoke') {
+                try {
+                    // 使用 preload 暴露的接口调用主进程
+                    const result = await window.electron.ipcRenderer.invoke(channel, ...args);
+
+                    // 调用成功，把结果发回给 iframe
+                    event.source.postMessage({
+                        type: 'ipc-invoke-response',
+                        requestId,
+                        success: true,
+                        result
+                    }, '*');
+                } catch (error) {
+                    // 调用失败，把错误信息发回给 iframe
+                    event.source.postMessage({
+                        type: 'ipc-invoke-response',
+                        requestId,
+                        success: false,
+                        error: error.message
+                    }, '*');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

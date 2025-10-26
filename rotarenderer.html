@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>RotaRenderer</title>
+    <link rel="stylesheet" href="material.css">
+    <script src="jszip.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>RotaRenderer</h1>
+
+        <div class="step-indicator">
+            <div id="step-1" class="step active">
+                <div class="step-number">1</div>
+                <div class="step-label">选择谱面</div>
+            </div>
+            <div id="step-2" class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">调整参数</div>
+            </div>
+            <div id="step-3" class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">开始渲染</div>
+            </div>
+            <div id="step-4" class="step">
+                <div class="step-number">4</div>
+                <div class="step-label">渲染完成</div>
+            </div>
+        </div>
+
+        <div id="step-content-0" class="step-content">
+            <div class="render-complete-message">读取文件...</div>
+        </div>
+
+        <div id="step-content-1" class="step-content active">
+            <div class="file-select-options">
+                <div class="file-option" onclick="handleZipUpload()">
+                    📂 上传 ZIP 文件
+                    <span>（包含所有资源，自动解压）</span>
+                </div>
+                <div class="file-option" onclick="handleFolderSelect()">
+                    📁 选择文件夹自动识别文件
+                    <span>（需自行实现调用系统接口）</span>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="primary-btn" disabled id="next-1" style="display: none;">下一步</button>
+            </div>
+        </div>
+
+        <div id="step-content-2" class="step-content">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="resolution">分辨率:</label>
+                    <select id="resolution">
+                        <option value="3840x2400">3840x2400 (4K UHD 16:10)</option>
+                        <option value="2560x1600">2560x1600 (WQXGA)</option>
+                        <option value="1920x1200">1920x1200 (WUXGA)</option>
+                        <option value="1680x1050" selected>1680x1050 (WSXGA+)</option>
+                        <option value="1440x900">1440x900 (WXGA+)</option>
+                        <option value="1280x800">1280x800 (WXGA)</option>
+                        <option value="1024x640">1024x640</option>
+                        <option value="800x500">800x500</option>
+                        <option value="640x400">640x400</option>
+                        <option value="320x200">320x200</option>
+                        <option value="80x50">80x50</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="framerate">帧率:</label>
+                    <select id="framerate">
+                        <option value="24">24 fps</option>
+                        <option value="30">30 fps</option>
+                        <option value="60" selected>60 fps</option>
+                        <option value="120">120 fps</option>
+                        <option value="144">144 fps</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="bitrate">码率:</label>
+                    <div class="control-row" style="align-items: flex-end;">
+                        <input type="number" id="bitrate" value="8000" min="100" max="50000" step="100"
+                            style="flex-grow: 1;">
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-size: 14px;">kbps</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="speed">谱面流速:</label>
+                    <div class="range-slider-row">
+                        <input type="range" id="speed" min="1" max="50" value="20" style="flex-grow: 1;">
+                        <span class="range-value" id="speed-value">20</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="size">Note大小:</label>
+                    <div class="range-slider-row">
+                        <input type="range" id="size" min="1" max="50" value="20" style="flex-grow: 1;">
+                        <span class="range-value" id="size-value">20</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container">
+                        <label for="hit" style="margin-right: 0;">打击特效:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="hit" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container">
+                        <label for="hitsound" style="margin-right: 0;">打击音效:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="hitsound" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="secondary-btn" onclick="prevStep()">上一步</button>
+                <button class="primary-btn" onclick="nextStep()">开始渲染</button>
+            </div>
+        </div>
+
+        <div id="step-content-3" class="step-content">
+            <div class="rendering-info" id="render-status-text">
+                正在准备渲染...
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="button-group">
+                <button class="secondary-btn" id="cancel-render-btn" onclick="showCancelModal()">取消渲染</button>
+                <button class="primary-btn" id="preview-toggle-btn" onclick="togglePreview()">显示预览</button>
+            </div>
+            <div class="iframe-container hidden" id="iframe-container">
+                <iframe id="embedded-frame" src="index.html"></iframe>
+            </div>
+        </div>
+
+        <div id="step-content-4" class="step-content">
+            <div class="render-complete-message">🎉 渲染完成！</div>
+            <div class="button-group">
+                <button class="reset-btn" onclick="resetToStep1()">重置</button>
+                <button class="primary-btn" onclick="openRenderFolder()">打开文件夹</button>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span class="status-indicator"></span>
+            <span id="status-text">加载中...</span>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cancel-modal">
+        <div class="modal-card">
+            <div class="modal-title">取消渲染</div>
+            <p>确定要取消当前的渲染任务吗？</p>
+            <div class="modal-actions">
+                <button class="secondary-btn" onclick="hideCancelModal()">否</button>
+                <button class="reset-btn" onclick="confirmCancelRender()">是，取消</button>
+            </div>
+        </div>
+    </div>
+    <script src="rotarenderer.js"></script>
+    <script src="ipcRenderer.js"></script>
+</body>
+
+</html>

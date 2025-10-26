@@ -1,0 +1,531 @@
+:root {
+  /* ===== Material You 深色主题（柔和版）+ 蓝色主色 ===== */
+  --md-sys-color-primary: #65a9ff;
+  /* 主色：明亮蓝 */
+  --md-sys-color-on-primary: #003262;
+  /* 主色上文字：深蓝 */
+  --md-sys-color-primary-container: #00498f;
+  --md-sys-color-on-primary-container: #bfe1ff;
+  --md-sys-color-secondary: #c3c5d1;
+  --md-sys-color-on-secondary: #2e3039;
+  --md-sys-color-secondary-container: #444751;
+  --md-sys-color-on-secondary-container: #dfe1ed;
+
+  /* 背景：比纯黑更柔和的深灰 */
+  --md-sys-color-background: #1c1b1f;
+
+  /* 主内容区域：比背景亮一点 */
+  --md-sys-color-surface: #2a292e;
+
+  /* 文字颜色 */
+  --md-sys-color-on-surface: #e6e1e5;
+  --md-sys-color-on-surface-variant: #c4c7c5;
+
+  /* 控件背景（输入框、滑块轨道等） */
+  --md-sys-color-surface-variant: #333238;
+
+  /* 边框/分割线 */
+  --md-sys-color-outline: #7a787e;
+
+  /* 错误色 */
+  --md-sys-color-error: #ffb4ab;
+  --md-sys-color-on-error: #690005;
+
+  /* 阴影（深色适配） */
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --elevation-2: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --elevation-3: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  margin: 0;
+  padding: 16px;
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-surface);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container {
+  background: var(--md-sys-color-surface);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: var(--elevation-2);
+  max-width: 900px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  color: var(--md-sys-color-on-surface);
+  margin: 0 0 24px 0;
+}
+
+/* 步骤条样式 */
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.step-indicator::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--md-sys-color-surface-variant);
+  z-index: 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  text-align: center;
+  z-index: 1;
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  font-size: 14px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.step-label {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: color 0.3s;
+}
+
+.step.active .step-number {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.step.active .step-label {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+/* 步骤内容样式 */
+/* --- 步骤内容样式（带过渡动画）--- */
+.step-content {
+  /* 基础设置 */
+  padding: 0 0; 
+  max-height: 0; /* 默认非活动状态下折叠 */
+  opacity: 0;
+  overflow: hidden; 
+
+  /* 过渡设置：将所有过渡时间设为一致 */
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.5s ease-in-out,
+              padding 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.step-content.active {
+  /* 激活状态：展开 */
+  max-height: 2000px; /* 足够大的值 */
+  opacity: 1;
+  padding: 16px 0; /* 激活时恢复 padding */
+}
+/* ⚠️ 移除 :not(.active) 块，因为 .step-content 已经是非活动状态的默认值 */
+
+.button-group {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+button,
+.control-button {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.primary-btn {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: var(--elevation-1);
+}
+
+.secondary-btn {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  box-shadow: none;
+}
+
+.primary-btn:hover,
+.secondary-btn:hover {
+  box-shadow: var(--elevation-2);
+  transform: translateY(-1px);
+}
+
+.primary-btn:active,
+.secondary-btn:active {
+  transform: translateY(0);
+}
+
+.reset-btn {
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+}
+
+/* 第一步：文件选择 */
+.file-select-options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.file-option {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  border-radius: 16px;
+  background-color: var(--md-sys-color-surface-variant);
+  cursor: pointer;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  box-shadow: var(--elevation-1);
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.file-option:hover {
+  background-color: #444349;
+  box-shadow: var(--elevation-2);
+}
+
+.file-option span {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* 第二步：参数调整 (沿用原有的控件样式) */
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.control-row > *:not(:last-child) {
+  margin-right: 8px;
+  /* 间隔 */
+}
+
+label {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  line-height: 16px;
+}
+
+select,
+input[type="number"] {
+  padding: 12px 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  background-color: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  font-family: inherit;
+}
+
+select:focus,
+input[type="number"]:focus {
+  background-color: var(--md-sys-color-surface);
+  box-shadow: 0 0 0 2px var(--md-sys-color-primary);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  margin-top: -8px;
+  cursor: pointer;
+  border: 2px solid var(--md-sys-color-on-primary);
+}
+
+.range-slider-row {
+  display: flex;
+  align-items: center;
+}
+
+.range-value {
+  min-width: 36px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  margin-left: 12px;
+}
+
+/* 开关控件样式 */
+.switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--md-sys-color-surface-variant);
+  transition: 0.3s;
+  border-radius: 16px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 6px;
+  bottom: 6px;
+  background-color: var(--md-sys-color-surface);
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+input:checked + .slider {
+  background-color: var(--md-sys-color-primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: var(--md-sys-color-on-primary);
+}
+
+/* 第三步：开始渲染 */
+.rendering-info {
+  text-align: center;
+  font-size: 18px;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 32px;
+}
+
+.progress-bar-container {
+  width: 80%;
+  max-width: 600px;
+  margin: 0 auto 24px;
+  height: 16px;
+  background-color: var(--md-sys-color-surface-variant);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background-color: var(--md-sys-color-primary);
+  transition: width 0.5s;
+}
+
+/* 渲染预览区域 */
+.iframe-container {
+  width: 100%;
+  max-width: 800px;
+  height: 500px;
+  border-radius: 28px;
+  overflow: hidden;
+  margin: 24px auto 0;
+  background-color: #222126;
+  border: 3px solid var(--md-sys-color-outline);
+  transition: max-height 0.3s, margin-top 0.3s, border-color 0.3s;
+}
+
+.iframe-container.hidden {
+  max-height: 0;
+  margin-top: 0;
+  border-width: 0;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  transform-origin: top left;
+}
+
+/* 状态栏 */
+.status-bar {
+  padding: 12px 16px;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4caf50;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* 第四步：渲染完成 */
+.render-complete-message {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  margin-bottom: 32px;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 4px;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background-color: var(--md-sys-color-surface);
+  padding: 24px;
+  border-radius: 28px;
+  box-shadow: var(--elevation-3);
+  width: 90%;
+  max-width: 400px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}

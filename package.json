@@ -1,0 +1,87 @@
+{
+  "name": "rotarenderer",
+  "version": "1.0.4",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "build:win": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac --universal",
+    "build:linux": "electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "asarUnpack": [
+      "bin/**"
+    ], 
+    "compression": "maximum",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "rotarenderer.html",
+      "assets/**/*", 
+      "bin/ffmpeg.exe", 
+      "bin/*.dll", 
+      "!RotaRendererSettings.js",
+      "!SCRenderer.js",
+      "script.js",
+      "package.json",
+      "!**/*.map",
+      "!release/**",
+      "!temp/**",
+      "!node_modules/**", 
+      "!*.log",
+      "!*.md"
+    ],
+    "appId": "com.bnao.rotarenderer",
+    "productName": "RotaRenderer",
+    "copyright": "Copyright © 2025 Bnao",
+    "directories": {
+      "output": "release/${version}"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "build/icons/icon.ico",
+      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icons/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icons/256x256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
+}
