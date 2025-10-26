@@ -119,7 +119,8 @@ class RotaRendererSettings {
                         'Note大小',
                         '打击特效大小',
                         '背景亮度',
-                        '渲染状态'
+                        '渲染状态',
+                        '谱面文件'
                     ]
                 },
                 BOOLEAN_SETTINGS: {
@@ -153,12 +154,18 @@ class RotaRendererSettings {
                 return rendererSettings.speed;
             case 'Note大小':
                 return rendererSettings.size;
-            case '打击特效大小': 
+            case '打击特效大小':
                 return rendererSettings.hitEffectSize;
-            case '背景亮度': 
+            case '背景亮度':
                 return rendererSettings.bgBrightness;
             case '渲染状态':
                 return isStartRenderer;
+            case '谱面文件':
+                if (typeof zipfile !== 'undefined') {
+                    return zipfile;
+                } else {
+                    return null;
+                }
             default:
                 return '未知设置';
         }
