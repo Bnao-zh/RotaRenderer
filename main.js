@@ -712,18 +712,17 @@ ipcMain.handle('open-directory-dialog', async (event) => {
 });
 
 /**
- * IPC 处理器：检查文件夹内容，读取必需的文件
+ * IPC 处理器：检查文件夹内容，读取所有可能的必需文件（txt、图片、音频）
+ * 注意：不验证 txt 内容，不强制图片存在，由前端处理逻辑
  * @param {string} folderPath 文件夹路径
  * @returns {{success: boolean, message?: string, fileData?: Array<{path: string, data: Buffer}>}} 结果对象
  */
 ipcMain.handle('check-folder-and-get-files', async (event, folderPath) => {
     const imgExts = ['jpg', 'jpeg', 'png', 'webp'];
     const audioExts = ['mp3', 'ogg', 'wav', 'flac'];
-    
-    let hasTxt = false;
-    let hasImage = false;
-    let hasAudio = false;
-    const requiredFiles = []; // 存储找到的必需文件路径
+    const txtExts = ['txt'];
+
+    const validFiles = []; // 存储所有合法文件路径（txt、img、audio）
 
     try {
         const files = await fs.promises.readdir(folderPath);
@@ -735,36 +734,35 @@ ipcMain.handle('check-folder-and-get-files', async (event, folderPath) => {
             // 忽略目录
             if (stat.isDirectory()) continue;
             
-            // 检查文件类型
-            if (!hasTxt && matchesExtension(file, ['txt'])) {
-                hasTxt = true;
-                requiredFiles.push(filePath);
-            } else if (!hasImage && matchesExtension(file, imgExts)) {
-                hasImage = true;
-                requiredFiles.push(filePath);
-            } else if (!hasAudio && matchesExtension(file, audioExts)) {
-                hasAudio = true;
-                requiredFiles.push(filePath);
-            }
-            
-            // 如果三个文件都找到了，可以提前退出循环
-            if (hasTxt && hasImage && hasAudio) {
-                break;
+            // 收集所有合法文件（txt、图片、音频）
+            if (matchesExtension(file, txtExts) ||
+                matchesExtension(file, imgExts) ||
+                matchesExtension(file, audioExts)) {
+                validFiles.push(filePath);
             }
         }
-        
-        // 检查是否包含所有必需文件
-        if (!(hasTxt && hasImage && hasAudio)) {
+
+        // 检查是否存在至少一个 txt 和一个音频（图片可选）
+        const hasTxt = validFiles.some(f => matchesExtension(path.basename(f), txtExts));
+        const hasAudio = validFiles.some(f => matchesExtension(path.basename(f), audioExts));
+
+        if (!hasTxt) {
             return {
                 success: false,
-                message: "文件夹缺少必需的文件。需要一个 .txt, 一个图片 (jpg/png/webp), 一个音乐 (mp3/ogg/wav/flac)。"
+                message: "文件夹中缺少 .txt 文件。"
             };
         }
-        
-        // 读取文件内容并传回 Buffer
-        const fileDataPromises = requiredFiles.map(async (filePath) => {
+        if (!hasAudio) {
+            return {
+                success: false,
+                message: "文件夹中缺少音频文件（支持 mp3/ogg/wav/flac）。"
+            };
+        }
+
+        // 读取所有合法文件的内容（Buffer）
+        const fileDataPromises = validFiles.map(async (filePath) => {
             const data = await fs.promises.readFile(filePath);
-            return { path: filePath, data: data }; // data 是 Buffer
+            return { path: filePath, data }; // data 是 Buffer
         });
 
         const fileData = await Promise.all(fileDataPromises);

@@ -94,131 +94,152 @@ function handleFileSelect(success) {
 }
 
 function handleZipUpload() {
-    // 1. 动态创建一个隐藏的文件输入元素
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    // 设置只接受 .zip 文件
     fileInput.accept = '.zip';
-    // 确保它不会出现在页面上，但可以被程序点击
     fileInput.style.display = 'none';
 
-    // 辅助函数：检查文件名是否匹配任何一个给定扩展名
     const matchesExtension = (filename, extensions) => {
-        const lowerFilename = filename.toLowerCase();
-        return extensions.some(ext => lowerFilename.endsWith(`.${ext}`));
+        const lower = filename.toLowerCase();
+        return extensions.some(ext => lower.endsWith('.' + ext));
     };
 
-    // 4. 监听文件选择变化事件
-    fileInput.addEventListener('change', (event) => {
+    // 生成纯黑色 cover.jpg 的 Data URL（JPEG）
+    const generateBlackCover = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 500;
+        canvas.height = 500;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.9); // 返回 data URL
+    };
+
+    fileInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
+        if (!file) {
+            fileInput.remove();
+            return;
+        }
 
-        // 5. 检查是否选择了文件
-        if (file) {
-            renderStep(0);
-            // 确保 iframe 存在并且内容已加载，可以访问其 contentWindow
-            if (iframe && iframe.contentWindow) {
-                const reader = new FileReader();
+        renderStep(0);
 
-                // 6. 使用 FileReader 将文件读取为 ArrayBuffer，以便 jszip 处理
-                reader.onload = async function (e) {
-                    const arrayBuffer = e.target.result;
+        if (!iframe || !iframe.contentWindow) {
+            console.error("无法找到 iframe 或 contentWindow。");
+            fileInput.remove();
+            renderStep(1);
+            return;
+        }
 
-                    // 检查文件内容逻辑
-                    try {
-                        // 1. 加载 ZIP 文件
-                        const zip = await JSZip.loadAsync(arrayBuffer);
-                        let hasTxt = false;
-                        let hasImage = false;
-                        let hasAudio = false;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const zip = await JSZip.loadAsync(e.target.result);
 
-                        // 定义允许的文件扩展名
-                        const imgExts = ['jpg', 'jpeg', 'png', 'webp'];
-                        const audioExts = ['mp3', 'ogg', 'wav', 'flac'];
+                const imgExts = ['jpg', 'jpeg', 'png', 'webp'];
+                const audioExts = ['mp3', 'ogg', 'wav', 'flac'];
 
-                        // 2. 遍历 ZIP 文件内容
-                        zip.forEach((relativePath, zipEntry) => {
-                            // 忽略目录
-                            if (zipEntry.dir) return;
+                let validTxtFile = null;
+                let imageFile = null;
+                let audioFile = null;
+                let extraFileFound = false;
 
-                            // 检查文件类型
-                            if (matchesExtension(relativePath, ['txt'])) {
-                                hasTxt = true;
-                            } else if (matchesExtension(relativePath, imgExts)) {
-                                hasImage = true;
-                            } else if (matchesExtension(relativePath, audioExts)) {
-                                hasAudio = true;
+                // 第一遍：检查所有文件是否合法，并分类
+                for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+                    if (zipEntry.dir) continue;
+
+                    const isTxt = matchesExtension(relativePath, ['txt']);
+                    const isImg = matchesExtension(relativePath, imgExts);
+                    const isAudio = matchesExtension(relativePath, audioExts);
+
+                    if (isTxt || isImg || isAudio) {
+                        // 合法文件，暂存内容（但不立即读取）
+                        if (isTxt && !validTxtFile) {
+                            // 读取内容检查第一行
+                            const content = await zipEntry.async('text');
+                            const firstLine = content.split('\n')[0] || '';
+                            if (firstLine.includes('Version')) {
+                                validTxtFile = { path: relativePath, content };
                             }
-                        });
-
-                        // 3. 检查是否包含所有必需文件
-                        if (hasTxt && hasImage && hasAudio) {
-                            console.log("ZIP 文件包含所需的所有文件类型 (txt, image, audio)。");
-
-                            // 读取文件为 Data URL (需要重新读取，因为 jszip 需要 ArrayBuffer)
-                            // 重新使用 FileReader 读取为 Data URL
-                            const dataUrlReader = new FileReader();
-                            dataUrlReader.onload = function (dataUrlEvent) {
-                                const dataUrl = dataUrlEvent.target.result;
-
-                                // 7. 将 Data URL 字符串保存在 iframe 里的 zipfile 变量
-                                iframe.contentWindow.zipfile = dataUrl;
-
-                                // 8. 调用 handleFileSelect(true)
-                                handleFileSelect(true);
-
-                                // 清理：移除创建的 fileInput 元素
-                                fileInput.remove();
-                            };
-                            dataUrlReader.onerror = function () {
-                                console.error("Data URL 读取失败。");
-                                fileInput.remove();
-                            };
-                            dataUrlReader.readAsDataURL(file); // 再次读取文件
-
-                        } else {
-                            // 文件不完整
-                            console.error("ZIP 文件缺少必需的文件。需要一个 .txt, 一个图片 (jpg/png/webp), 一个音乐 (mp3/ogg/wav/flac)。");
-                            alert("导入失败：ZIP 文件不包含必需的文件（txt、图片、音乐）。");
-                            // 清理
-                            fileInput.remove();
-                            renderStep(1);
+                        } else if (isImg && !imageFile) {
+                            imageFile = { path: relativePath, blob: await zipEntry.async('blob') };
+                        } else if (isAudio && !audioFile) {
+                            audioFile = { path: relativePath, blob: await zipEntry.async('blob') };
                         }
-
-                    } catch (error) {
-                        console.error("处理 ZIP 文件时出错:", error);
-                        alert("导入失败：无法读取或处理 ZIP 文件。");
-                        // 清理
-                        fileInput.remove();
-                        renderStep(1);
+                    } else {
+                        // 存在非法文件
+                        extraFileFound = true;
+                        break;
                     }
-                };
+                }
 
-                reader.onerror = function () {
-                    console.error("文件读取失败。");
+                // if (extraFileFound) {
+                //     throw new Error("ZIP 包含不支持的文件类型。仅允许 .txt、图片（jpg/png/webp）、音频（mp3/ogg/wav/flac）。");
+                // }
+
+                if (!validTxtFile) {
+                    throw new Error("缺少有效的 .txt 文件（第一行需包含 'Version'）。");
+                }
+                if (!audioFile) {
+                    throw new Error("缺少音频文件（支持 mp3/ogg/wav/flac）。");
+                }
+
+                // 如果没有图片，生成黑色 cover.jpg
+                if (!imageFile) {
+                    console.log("未找到图片，将生成纯黑色 cover.jpg");
+                }
+
+                // 创建新的 ZIP，只包含三个标准命名文件
+                const newZip = new JSZip();
+                newZip.file("chart.txt", validTxtFile.content);
+
+                if (imageFile) {
+                    // 重命名为 cover.jpg，但保留原始格式（不转码）
+                    // 注意：这里我们只是改名，不改变内容
+                    newZip.file("cover.jpg", imageFile.blob);
+                } else {
+                    // 生成黑色图片（data URL 转 Blob）
+                    const blackCoverDataUrl = generateBlackCover();
+                    const res = await fetch(blackCoverDataUrl);
+                    const blob = await res.blob();
+                    newZip.file("cover.jpg", blob);
+                }
+
+                newZip.file("song.wav", audioFile.blob);
+
+                // 生成新 ZIP 的 Data URL
+                const newZipBlob = await newZip.generateAsync({ type: 'blob' });
+                const dataUrlReader = new FileReader();
+                dataUrlReader.onload = () => {
+                    iframe.contentWindow.zipfile = dataUrlReader.result;
+                    handleFileSelect(true);
+                    fileInput.remove();
+                };
+                dataUrlReader.onerror = () => {
+                    console.error("生成最终 ZIP Data URL 失败。");
                     fileInput.remove();
                     renderStep(1);
                 };
+                dataUrlReader.readAsDataURL(newZipBlob);
 
-                // 开始读取文件为 ArrayBuffer
-                reader.readAsArrayBuffer(file);
-            } else {
-                console.error("无法找到 iframe 或 contentWindow。");
-                // 清理
+            } catch (error) {
+                console.error("处理 ZIP 文件时出错:", error);
+                alert("导入失败：" + (error.message || "无法处理 ZIP 文件。"));
                 fileInput.remove();
                 renderStep(1);
             }
-        } else {
-            // 9. 如果没有选择文件（用户取消），不运行 handleFileSelect(true)
-            console.log("用户取消了文件选择。");
-            // 清理
+        };
+
+        reader.onerror = () => {
+            console.error("文件读取失败。");
             fileInput.remove();
-        }
+            renderStep(1);
+        };
+
+        reader.readAsArrayBuffer(file);
     });
 
-    // 将 input 元素添加到 DOM 中（尽管是隐藏的）
     document.body.appendChild(fileInput);
-
-    // 3. 模拟用户点击文件输入框
     fileInput.click();
 }
 
@@ -296,77 +317,122 @@ const matchesExtension = (filename, extensions) => {
 async function handleFolderSelect() {
     console.log("调用主进程选择文件夹...");
 
-    try {
-        // 1. 调用主进程打开文件夹选择对话框
-        const folderPath = await invokeIpc('open-directory-dialog');
+    // 辅助函数：检查扩展名
+    const matchesExtension = (filename, extensions) => {
+        const lower = filename.toLowerCase();
+        return extensions.some(ext => lower.endsWith('.' + ext));
+    };
 
+    // 生成黑色 cover.jpg 的 Uint8Array
+    const generateBlackCoverAsUint8Array = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 500;
+        canvas.height = 500;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 转为 blob，再转为 array buffer
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+        const arrayBuffer = await blob.arrayBuffer();
+        return new Uint8Array(arrayBuffer);
+    };
+
+    try {
+        const folderPath = await invokeIpc('open-directory-dialog');
         if (!folderPath) {
             console.log("用户取消了文件夹选择。");
             return;
         }
         renderStep(0);
-
         console.log("已选择文件夹:", folderPath);
 
-        // 2. 调用主进程检查文件夹内容并读取文件数据
         const result = await invokeIpc('check-folder-and-get-files', folderPath);
-
         if (!result.success) {
             alert(`导入失败：${result.message}`);
             renderStep(1);
             return;
         }
 
-        console.log("主进程检查通过，准备打包 ZIP...");
-        const fileData = result.fileData; // 包含 { path, data } 的数组
+        const fileData = result.fileData; // [{ path, data }]
 
-        // 3. 在前端使用 JSZip 打包
-        // 假设 JSZip 是一个全局变量
-        const zip = new JSZip();
-
-        // 3.1 定义允许的文件扩展名
+        // 分类文件
         const txtExts = ['txt'];
         const imgExts = ['jpg', 'jpeg', 'png', 'webp'];
         const audioExts = ['mp3', 'ogg', 'wav', 'flac'];
 
-        fileData.forEach(item => {
-            // 注意：item.data 在 Electron IPC 中传输后，可能是 Buffer 或 Uint8Array
-            // JSZip 可以处理 Uint8Array，这通常是传输 Buffer 后的结果
-            const filename = item.path.split(/[/\\]/).pop(); // 获取文件名
-            let zipFilename = filename;
+        let validTxt = null;
+        let imageFile = null;
+        let audioFile = null;
 
-            // 可选：为了保证在 zip 中有唯一的且容易识别的名字，可以根据类型重命名
-            if (matchesExtension(filename, txtExts)) {
-                zipFilename = `chart.txt`;
-            } else if (matchesExtension(filename, imgExts)) {
-                zipFilename = `cover.jpg`;
-            } else if (matchesExtension(filename, audioExts)) {
-                zipFilename = `song.wav`;
+        // 遍历所有文件，分类并验证
+        for (const item of fileData) {
+            const filename = item.path.split(/[/\\]/).pop();
+            const isTxt = matchesExtension(filename, txtExts);
+            const isImg = matchesExtension(filename, imgExts);
+            const isAudio = matchesExtension(filename, audioExts);
+
+            if (isTxt && !validTxt) {
+                // 尝试将 data 转为文本（假设是 Uint8Array 或 string）
+                let textContent = '';
+                if (typeof item.data === 'string') {
+                    textContent = item.data;
+                } else if (item.data instanceof Uint8Array || item.data instanceof ArrayBuffer) {
+                    const decoder = new TextDecoder('utf-8');
+                    textContent = decoder.decode(item.data);
+                }
+
+                const firstLine = textContent.split('\n')[0] || '';
+                if (firstLine.includes('Version')) {
+                    validTxt = { filename, content: textContent };
+                }
+            } else if (isImg && !imageFile) {
+                imageFile = { filename, data: item.data };
+            } else if (isAudio && !audioFile) {
+                audioFile = { filename, data: item.data };
             }
+        }
 
-            // 将文件数据添加到 ZIP 中
-            zip.file(zipFilename, item.data, { binary: true });
-            console.log(`已添加文件到 ZIP: ${zipFilename}`);
-        });
+        // 必要文件检查
+        if (!validTxt) {
+            throw new Error("文件夹中缺少有效的 .txt 文件（第一行需包含 'Version'）。");
+        }
+        if (!audioFile) {
+            throw new Error("文件夹中缺少音频文件（支持 mp3/ogg/wav/flac）。");
+        }
 
-        // 4. 生成 Data URL 字符串
-        const dataUrl = await zip.generateAsync({ type: "base64" });
-        const zipDataUrl = `data:application/zip;base64,${dataUrl}`;
+        // 创建 ZIP
+        const zip = new JSZip();
+        zip.file("chart.txt", validTxt.content);
 
-        // 5. 保存 Data URL 并调用 handleFileSelect
-        if (iframe && iframe.contentWindow) {
+        if (imageFile) {
+            // 注意：这里我们直接使用原始二进制数据，仅重命名
+            zip.file("cover.jpg", imageFile.data, { binary: true });
+        } else {
+            console.log("未找到图片，生成纯黑色 cover.jpg");
+            const blackCoverData = await generateBlackCoverAsUint8Array();
+            zip.file("cover.jpg", blackCoverData, { binary: true });
+        }
+
+        zip.file("song.wav", audioFile.data, { binary: true });
+
+        // 生成 Data URL
+        const base64 = await zip.generateAsync({ type: "base64" });
+        const zipDataUrl = `data:application/zip;base64,${base64}`;
+
+        if (iframe?.contentWindow) {
             iframe.contentWindow.zipfile = zipDataUrl;
             handleFileSelect(true);
             console.log("ZIP Data URL 已保存并调用 handleFileSelect(true)。");
         } else {
             renderStep(1);
-            console.error("无法找到 iframe 或 contentWindow。");
+            throw new Error("无法找到 iframe 或 contentWindow。");
         }
 
     } catch (error) {
         renderStep(1);
         console.error("处理文件夹时发生错误:", error);
-        alert("导入失败：处理文件夹时发生错误。请查看控制台。");
+        alert("导入失败：" + (error.message || "处理文件夹时发生错误。"));
     }
 }
 
