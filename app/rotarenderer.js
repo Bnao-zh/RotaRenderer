@@ -492,6 +492,7 @@ function applySettings() {
         // hitsound: document.getElementById('hitsound').checked
         // --- 新增/修改的设置 ---
         hitEffectSize: document.getElementById('hit-effect-size').value, // 打击特效大小 (0-50)
+        hitEffectAlpha: document.getElementById('hit-effect-alpha').value, // 打击特效透明度 (0-100)
         bgBrightness: document.getElementById('bg-brightness').value, // 背景亮度 (0-100)
         hitsoundVolume: hitsoundVolumeJsonString,
     };
@@ -571,6 +572,7 @@ function setupEventListeners() {
         { id: 'size', displayId: 'size-value' },
         { id: 'bg-brightness', displayId: 'bg-brightness-value' },
         { id: 'hit-effect-size', displayId: 'hit-effect-size-value' },
+        { id: 'hit-effect-alpha', displayId: 'hit-effect-alpha-value' },
         { id: 'volume-tap', displayId: 'volume-tap-value' },
         { id: 'volume-smallslide', displayId: 'volume-smallslide-value' },
         { id: 'volume-bigslide', displayId: 'volume-bigslide-value' },

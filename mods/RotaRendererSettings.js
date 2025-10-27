@@ -8,7 +8,8 @@ let rendererSettings = {
     size: 20,
 
     // --- 新增的数字设置 ---
-    hitEffectSize: 30,         // 打击特效大小 (0-50)
+    hitEffectSize: 20,         // 打击特效大小 (0-50)
+    hitEffectAlpha: 100,        // 打击特效透明度 (0-100)
     bgBrightness: 75,          // 背景亮度 (0-100)
 
     // --- 默认的 hitsoundVolume JSON 字符串 ---
@@ -42,6 +43,7 @@ window.addEventListener('message', (event) => {
             speed: !isNaN(parseFloat(data.speed)) ? parseFloat(data.speed) : 20,
             size: !isNaN(parseFloat(data.size)) ? parseFloat(data.size) : 20,
             hitEffectSize: !isNaN(parseFloat(data.hitEffectSize)) ? parseFloat(data.hitEffectSize) : 30,
+            hitEffectAlpha: !isNaN(parseFloat(data.hitEffectAlpha)) ? parseFloat(data.hitEffectAlpha) : 100,
             bgBrightness: !isNaN(parseFloat(data.bgBrightness)) ? parseFloat(data.bgBrightness) : 75,
 
             // hitsoundVolume 直接使用传入的 JSON 字符串
@@ -116,6 +118,7 @@ class RotaRendererSettings {
                         '谱面流速',
                         'Note大小',
                         '打击特效大小',
+                        '打击特效透明度',
                         '背景亮度',
                         '渲染状态',
                         '谱面文件'
@@ -154,6 +157,8 @@ class RotaRendererSettings {
                 return rendererSettings.size;
             case '打击特效大小':
                 return rendererSettings.hitEffectSize;
+            case '打击特效透明度':
+                return rendererSettings.hitEffectAlpha;
             case '背景亮度':
                 return rendererSettings.bgBrightness;
             case '渲染状态':
