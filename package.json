@@ -1,6 +1,6 @@
 {
   "name": "rotarenderer",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -19,6 +19,7 @@
     "compression": "maximum",
     "files": [
       "main.js",
+      "video_renderer.js",
       "preload.js",
       "rotarenderer.html",
       "bin/ffmpeg.exe", 
