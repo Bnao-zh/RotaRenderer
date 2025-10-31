@@ -4,6 +4,7 @@ const { execFile } = require('child_process');
 const fs = require('fs');
 const { Buffer } = require('buffer');
 const { spawn } = require('child_process');
+const { VideoRenderer } = require('./video_renderer.js');
 
 // if (app.isPackaged) {
 //     const logFile = path.join(process.resourcesPath, 'app.log');
@@ -544,126 +545,219 @@ function delimg() {
         });
     });
 }
-// 新方法------------------------------------------
-let ffmpegProcess = null;
-let frameCounter = 0;
-const tempDir = path.join(TEMP_DIR, 'temp_frames');
-let isRendering = false;
-let outputPath = '';
+// // 新方法------------------------------------------
+// let ffmpegProcess = null;
+// let frameCounter = 0;
+// const tempDir = path.join(TEMP_DIR, 'temp_frames');
+// let isRendering = false;
+// let outputPath = '';
 
-function startRendering(event, output, fps = 60, width = 1280, height = 720) {
-    return new Promise((resolve, reject) => {
-        if (isRendering) {
-            reject(new Error('渲染已经在进行中'));
-            return;
-        }
+// function startRendering(event, output, fps = 60, width = 1280, height = 720) {
+//     return new Promise((resolve, reject) => {
+//         if (isRendering) {
+//             reject(new Error('渲染已经在进行中'));
+//             return;
+//         }
 
-        isRendering = true;
-        frameCounter = 0;
-        outputPath = output;
+//         isRendering = true;
+//         frameCounter = 0;
+//         outputPath = output;
 
-        // 创建临时目录存放帧
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir);
-        } else {
-            // 清空临时目录
-            fs.readdirSync(tempDir).forEach(file => {
-                fs.unlinkSync(path.join(tempDir, file));
-            });
-        }
+//         // 创建临时目录存放帧
+//         if (!fs.existsSync(tempDir)) {
+//             fs.mkdirSync(tempDir);
+//         } else {
+//             // 清空临时目录
+//             fs.readdirSync(tempDir).forEach(file => {
+//                 fs.unlinkSync(path.join(tempDir, file));
+//             });
+//         }
 
-        // 设置FFmpeg参数
-        const args = [
-            '-y', // 覆盖输出文件
-            '-f', 'image2pipe', // 输入格式为图像管道
-            '-r', fps.toString(), // 输入帧率
-            '-s', `${width}x${height}`, // 帧尺寸
-            '-i', '-', // 从标准输入读取
-            '-c:v', 'libx264', // 视频编码器
-            '-preset', 'fast', // 编码预设
-            '-pix_fmt', 'yuv420p', // 像素格式
-            '-r', fps.toString(), // 输出帧率
-            outputPath
-        ];
+//         // 设置FFmpeg参数
+//         const args = [
+//             '-y', // 覆盖输出文件
+//             '-f', 'image2pipe', // 输入格式为图像管道
+//             '-r', fps.toString(), // 输入帧率
+//             '-s', `${width}x${height}`, // 帧尺寸
+//             '-i', '-', // 从标准输入读取
+//             '-c:v', 'libx264', // 视频编码器
+//             '-preset', 'fast', // 编码预设
+//             '-pix_fmt', 'yuv420p', // 像素格式
+//             '-r', fps.toString(), // 输出帧率
+//             outputPath
+//         ];
 
-        ffmpegProcess = spawn(FFMPEG_PATH, args);
+//         ffmpegProcess = spawn(FFMPEG_PATH, args);
 
-        // 处理错误和输出
-        ffmpegProcess.stderr.on('data', (data) => {
-            console.error(`FFmpeg stderr: ${data}`);
-        });
+//         // 处理错误和输出
+//         ffmpegProcess.stderr.on('data', (data) => {
+//             console.error(`FFmpeg stderr: ${data}`);
+//         });
 
-        ffmpegProcess.on('error', (err) => {
-            isRendering = false;
-            console.error('FFmpeg 进程错误:', err);
-            reject(err);
-        });
+//         ffmpegProcess.on('error', (err) => {
+//             isRendering = false;
+//             console.error('FFmpeg 进程错误:', err);
+//             reject(err);
+//         });
 
-        // 等待FFmpeg准备好
-        setTimeout(() => {
-            resolve();
-        }, 100);
-    });
-}
+//         // 等待FFmpeg准备好
+//         setTimeout(() => {
+//             resolve();
+//         }, 100);
+//     });
+// }
+
+// /**
+//  * 添加一帧到视频
+//  * @param {string} pngDataURL - PNG图像的DataURL
+//  * @returns {Promise<void>}
+//  */
+// function addFrame(event, pngDataURL) {
+//     return new Promise((resolve, reject) => {
+//         if (!isRendering || !ffmpegProcess) {
+//             reject(new Error('渲染尚未开始或已结束'));
+//             return;
+//         }
+
+//         // 从DataURL中提取Base64数据
+//         const base64Data = pngDataURL.replace(/^data:image\/png;base64,/, '');
+//         const buffer = Buffer.from(base64Data, 'base64');
+
+//         // 将帧数据写入FFmpeg的标准输入
+//         ffmpegProcess.stdin.write(buffer, (err) => {
+//             if (err) {
+//                 console.error('写入帧数据失败:', err);
+//                 reject(err);
+//             } else {
+//                 frameCounter++;
+//                 resolve();
+//             }
+//         });
+//     });
+// }
+
+// /**
+//  * 结束视频渲染
+//  * @returns {Promise<string>} 返回输出视频路径
+//  */
+// function endRendering() {
+//     return new Promise((resolve, reject) => {
+//         if (!isRendering || !ffmpegProcess) {
+//             reject(new Error('渲染尚未开始或已结束'));
+//             return;
+//         }
+
+//         // 监听FFmpeg进程结束
+//         ffmpegProcess.on('close', (code) => {
+//             isRendering = false;
+//             if (code === 0) {
+//                 resolve(outputPath);
+//             } else {
+//                 reject(new Error(`FFmpeg 进程退出，代码 ${code}`));
+//             }
+//         });
+
+//         ffmpegProcess.on('error', (err) => {
+//             isRendering = false;
+//             reject(err);
+//         });
+
+//         // 结束输入流
+//         ffmpegProcess.stdin.end();
+//     });
+// }
+
+process.env.FFMPEG_PATH = FFMPEG_PATH; 
+
+
+// --- 渲染状态管理 ---
+/** @type {VideoRenderer | null} */
+let currentRenderer = null;
+
+// --- IPC 处理器函数 ---
 
 /**
- * 添加一帧到视频
- * @param {string} pngDataURL - PNG图像的DataURL
- * @returns {Promise<void>}
+ * 启动视频渲染进程
+ * @param {Electron.IpcMainInvokeEvent} event
+ * @param {object} options 渲染选项
+ * @param {number} options.width 视频宽度
+ * @param {number} options.height 视频高度
+ * @param {number} options.frameRate 帧率
+ * @param {string} options.bitrate 码率 (例如 '2000k')
+ * @param {string} options.outputPath 输出文件路径
+ * @returns {Promise<boolean>} 启动成功返回 true
  */
-function addFrame(event, pngDataURL) {
-    return new Promise((resolve, reject) => {
-        if (!isRendering || !ffmpegProcess) {
-            reject(new Error('渲染尚未开始或已结束'));
-            return;
-        }
+async function startRendering(event, { width, height, frameRate, bitrate, outputPath }) {
+    if (currentRenderer) {
+        console.warn('已有渲染任务在进行中。');
+        return false;
+    }
 
-        // 从DataURL中提取Base64数据
-        const base64Data = pngDataURL.replace(/^data:image\/png;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        // 将帧数据写入FFmpeg的标准输入
-        ffmpegProcess.stdin.write(buffer, (err) => {
-            if (err) {
-                console.error('写入帧数据失败:', err);
-                reject(err);
-            } else {
-                frameCounter++;
-                resolve();
-            }
-        });
-    });
+    try {
+        // 实例化 VideoRenderer，并将 FFMPEG_PATH 传入（如果你的类设计成这样）
+        // 假设 VideoRenderer 构造函数中会使用 process.env.FFMPEG_PATH 或直接使用传入的路径
+        tempoutputPath = path.join(TEMP_DIR, outputPath);
+        currentRenderer = new VideoRenderer(tempoutputPath,FFMPEG_PATH);
+        
+        // 启动 FFmpeg 进程
+        currentRenderer.startRender(width, height, frameRate, bitrate);
+        
+        console.log(`[IPC] 渲染任务已启动，输出到: ${outputPath}`);
+        return true;
+    } catch (error) {
+        console.error('[IPC] 启动渲染失败:', error);
+        currentRenderer = null;
+        return false;
+    }
 }
 
+
 /**
- * 结束视频渲染
- * @returns {Promise<string>} 返回输出视频路径
+ * 传入一帧图片数据
+ * @param {Electron.IpcMainInvokeEvent} event
+ * @param {string} dataUrl 图片的 Data URL 字符串
+ * @returns {Promise<boolean>} 传入成功返回 true
  */
-function endRendering() {
-    return new Promise((resolve, reject) => {
-        if (!isRendering || !ffmpegProcess) {
-            reject(new Error('渲染尚未开始或已结束'));
-            return;
-        }
+async function addFrame(event, dataUrl) {
+    if (!currentRenderer) {
+        console.error('[IPC] 无法添加帧，渲染任务未启动。');
+        return false;
+    }
 
-        // 监听FFmpeg进程结束
-        ffmpegProcess.on('close', (code) => {
-            isRendering = false;
-            if (code === 0) {
-                resolve(outputPath);
-            } else {
-                reject(new Error(`FFmpeg 进程退出，代码 ${code}`));
-            }
-        });
+    try {
+        currentRenderer.sendFrame(dataUrl);
+        // console.log('[IPC] 成功发送一帧。'); // 频繁打印可能影响性能
+        return true;
+    } catch (error) {
+        console.error('[IPC] 发送帧失败:', error);
+        return false;
+    }
+}
 
-        ffmpegProcess.on('error', (err) => {
-            isRendering = false;
-            reject(err);
-        });
 
-        // 结束输入流
-        ffmpegProcess.stdin.end();
-    });
+/**
+ * 结束渲染，关闭管道并等待文件写入完成
+ * @param {Electron.IpcMainInvokeEvent} event
+ * @returns {Promise<string|null>} 渲染成功返回输出路径，失败返回 null
+ */
+async function endRendering(event) {
+    if (!currentRenderer) {
+        console.warn('[IPC] 渲染任务已结束或未启动。');
+        return null;
+    }
+
+    const rendererToFinish = currentRenderer;
+    currentRenderer = null; // 清除当前引用，允许新任务启动
+
+    try {
+        const outputPath = await rendererToFinish.endRender();
+        console.log(`[IPC] 渲染任务成功完成: ${outputPath}`);
+        return outputPath;
+    } catch (error) {
+        console.error('[IPC] 结束渲染失败:', error);
+        // 确保清理
+        return null;
+    }
 }
 
 function opentempfolder() {
