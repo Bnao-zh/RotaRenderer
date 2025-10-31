@@ -44,6 +44,9 @@ class VideoRenderer {
             
             // 从 stdin 读取输入数据
             '-i', '-', 
+
+            // 视频滤镜，用于确保视频分辨率为偶数
+            '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
             
             // 视频编码器
             '-c:v', 'libx264', 

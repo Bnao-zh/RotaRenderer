@@ -667,7 +667,7 @@ function delimg() {
 //     });
 // }
 
-process.env.FFMPEG_PATH = FFMPEG_PATH; 
+process.env.FFMPEG_PATH = FFMPEG_PATH;
 
 
 // --- 渲染状态管理 ---
@@ -697,11 +697,11 @@ async function startRendering(event, { width, height, frameRate, bitrate, output
         // 实例化 VideoRenderer，并将 FFMPEG_PATH 传入（如果你的类设计成这样）
         // 假设 VideoRenderer 构造函数中会使用 process.env.FFMPEG_PATH 或直接使用传入的路径
         tempoutputPath = path.join(TEMP_DIR, outputPath);
-        currentRenderer = new VideoRenderer(tempoutputPath,FFMPEG_PATH);
-        
+        currentRenderer = new VideoRenderer(tempoutputPath, FFMPEG_PATH, path.join(TEMP_DIR, 'output.aac'));
+
         // 启动 FFmpeg 进程
         currentRenderer.startRender(width, height, frameRate, bitrate);
-        
+
         console.log(`[IPC] 渲染任务已启动，输出到: ${outputPath}`);
         return true;
     } catch (error) {
@@ -824,10 +824,10 @@ ipcMain.handle('check-folder-and-get-files', async (event, folderPath) => {
         for (const file of files) {
             const filePath = path.join(folderPath, file);
             const stat = await fs.promises.stat(filePath);
-            
+
             // 忽略目录
             if (stat.isDirectory()) continue;
-            
+
             // 收集所有合法文件（txt、图片、音频）
             if (matchesExtension(file, txtExts) ||
                 matchesExtension(file, imgExts) ||
