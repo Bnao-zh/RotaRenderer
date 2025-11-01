@@ -31,12 +31,20 @@ const TEMP_DIR = getTempDir();
 
 // 动态获取 FFmpeg 路径
 function getFFmpegPath() {
+    let ffmpegPath;
+    
     if (app.isPackaged) {
         // 打包后：从 asar 外部加载 FFmpeg
-        return path.join(process.resourcesPath, 'app.asar.unpacked', 'bin', 'ffmpeg');
+        ffmpegPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'bin', 'ffmpeg');
     } else {
         // 打包前：从项目 bin 目录加载 FFmpeg
-        return path.join(__dirname, 'bin', 'ffmpeg');
+        ffmpegPath = path.join(__dirname, 'bin', 'ffmpeg');
+    }
+    
+    if (fs.existsSync(ffmpegPath)) {
+        return ffmpegPath;
+    } else {
+        return 'ffmpeg';
     }
 }
 
